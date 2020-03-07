@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<div id="app">
+    <div class="buttonGroup">
+        <input type="file" id="file" style="display:none;"
+            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <button id="upLocalFile">本地excle文件</button>
+    </div>
+    <div id="jsonData">
+
+    </div>
+</div>
+
+<body>
+    <script src="./node_modules/jquery/dist/jquery.js"></script>
+    <script type="text/javascript" src="./node_modules/xlsx/dist/xlsx.core.min.js"></script>
+    <script src="https://cdn.bootcss.com/numeral.js/2.0.6/numeral.min.js"></script>
+    <script>
+        //test
+        // var myNumberal = numeral(1000).format('0,0.00')
+        // console.log(myNumberal)
+        //工具类
+        //对日期进行格式化
+        function formatDate(timeValue) {
+            let time = new Date((timeValue - 1) * 24 * 3600000 + 1)
+            // console.log(time.getFullYear())
+            time.setYear(time.getFullYear() - 70)
+            let year = time.getFullYear() + ''
+            let month = time.getMonth() + 1 + ''
+            let date = time.getDate() + ''
+            return year + "-" + month + "-" + date
+        }
+        //选择文件
+        $('#upLocalFile').click(function () {
+            $("#file").click()
+        })
+        //读取本地文件
+        // 读取本地excel文件
+        function readWorkbookFromLocalFile(file, callback) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var data = e.target.result;
+                var workbook = XLSX.read(data, {
+                    type: 'binary'
+                });
+                if (callback) callback(workbook);
+            };
+            reader.readAsBinaryString(file);
+        }
+        //对excel中数据进行分析
+        function readWorkbook(workbook) {
+            var sheetNames = workbook.SheetNames; // 工作表名称集合
+            var worksheet = workbook.Sheets[sheetNames[0]]; // 这里我们只读取第一张sheet
+            console.log(worksheet)
+            var XL_row_object = XLSX.utils.sheet_to_row_object_array(worksheet);
+            var new_arr = []
+            XL_row_object.forEach(function (val, index) {
+                // console.log(val, index)
+                val.loanTime = formatDate(val.loanTime)
+
+                val.loanAmount = numeral(val.loanAmount).format('0,0.00')
+                val.firstLoanAmount = numeral(val.firstLoanAmount).format('0,0.00')
+                val.sumRepayAmount = numeral(val.sumRepayAmount).format('0,0.00')
+                val.advanceAmount = numeral(val.advanceAmount).format('0,0.00')
+                val.renewRepayAmount = numeral(val.renewRepayAmount).format('0,0.00')
+                val.t0Amount = numeral(val.t0Amount).format('0,0.00')
+                val.t1Amount = numeral(val.t1Amount).format('0,0.00')
+                val.t2Amount = numeral(val.t2Amount).format('0,0.00')
+                val.t3Amount = numeral(val.t3Amount).format('0,0.00')
+                val.m1Amount = numeral(val.m1Amount).format('0,0.00')
+                val.m2Amount = numeral(val.m2Amount).format('0,0.00')
+
+                // val.t2Amount = numeral(val.t2Amount).format('0,0.00')
+                val.renewRatio = numeral(val.renewRatio).format('0.00%')
+                val.sumOverdueRate = numeral(val.sumOverdueRate).format('0.00%')
+                val.firstLoanOverdueRate = numeral(val.firstLoanOverdueRate).format('0.00%')
+                val.renewOverDueRate = numeral(val.renewOverDueRate).format('0.00%')
+                val.sumRepayRatio = numeral(val.sumRepayRatio).format('0.00%')
+                val.advanceRatio = numeral(val.advanceRatio).format('0.00%')
+                val.renewRepayRatio = numeral(val.renewRepayRatio).format('0.00%')
+
+                val.t0Ratio = numeral(val.t0Ratio).format('0.00%')
+                val.t1Ratio = numeral(val.t1Ratio).format('0.00%')
+                val.t2Ratio = numeral(val.t2Ratio).format('0.00%')
+                val.t3Ratio = numeral(val.t3Ratio).format('0.00%')
+                val.m1Ratio = numeral(val.m1Ratio).format('0.00%')
+                val.m2Ratio = numeral(val.m2Ratio).format('0.00%')
+                new_arr.push(val)
+            })
+            // console.log($("#jsonData").text = new_arr.reverse())
+            // var csv = XLSX.utils.sheet_to_csv(worksheet);
+            document.getElementById('jsonData').innerHTML = JSON.stringify(new_arr.reverse())
+        }
+        $(function () {
+            document.getElementById('file').addEventListener('change', function (e) {
+                console.log(e)
+                var files = e.target.files;
+                if (files.length == 0) return;
+                var f = files[0];
+                if (!/\.xlsx$/g.test(f.name)) {
+                    alert('仅支持读取xlsx格式！');
+                    return;
+                }
+                readWorkbookFromLocalFile(f, function (workbook) {
+                    readWorkbook(workbook);
+                });
+            });
+
+        });
+    </script>
+</body>
+
+</html>
